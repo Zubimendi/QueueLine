@@ -23,15 +23,15 @@ func NewRouter(engine *queue.Engine, pool *pgxpool.Pool, log *zap.Logger, defaul
 	// Liveness: is the process up. Readiness: is it up AND can it reach
 	// Postgres. An orchestrator should stop routing traffic to an
 	// instance that fails readiness without necessarily restarting it.
-	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) { writeJSON(w, http.StatusOK, map[string]string{"status": "ok"}) })
 	r.Get("/readyz", func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 		defer cancel()
 		if err := pool.Ping(ctx); err != nil {
-			w.WriteHeader(http.StatusServiceUnavailable)
+			writeError(w, http.StatusServiceUnavailable, "UNAVAILABLE", "database is not reachable")
 			return
 		}
-		w.WriteHeader(http.StatusOK)
+		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 	})
 	r.Handle("/metrics", observability.MetricsHandler())
 
