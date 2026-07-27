@@ -1,0 +1,35 @@
+{
+  "name": "QueueLine Local Environment",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "queue_name",
+      "value": "welcome-emails",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "job_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "lease_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "dead_letter_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ]
+}

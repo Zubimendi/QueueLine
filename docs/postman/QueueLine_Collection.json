@@ -1,0 +1,175 @@
+{
+  "info": {
+    "name": "QueueLine API",
+    "description": "Postman collection for QueueLine API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/healthz",
+        "description": "### Health Check\nReturns `200 OK` if the HTTP server is running."
+      }
+    },
+    {
+      "name": "Ready",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/readyz",
+        "description": "### Readiness Check\nReturns `200 OK` if the server is running AND can reach the PostgreSQL database. Returns `503 Service Unavailable` otherwise."
+      }
+    },
+    {
+      "name": "Metrics",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/metrics",
+        "description": "### Metrics\nExposes Prometheus metrics for the QueueLine process."
+      }
+    },
+    {
+      "name": "Enqueue Job",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if(pm.response.code === 201 || pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.environment.set('job_id', jsonData.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/v1/queues/{{queue_name}}/jobs",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"payload\": {\"userEmail\": \"test@example.com\"},\n  \"priority\": 1,\n  \"delaySeconds\": 0,\n  \"maxAttempts\": 3,\n  \"dedupKey\": \"test-1\"\n}"
+        },
+        "description": "### Enqueue Job\nEnqueues a new job onto the specified queue.\n\n**Request Body:**\n- `payload` (object): Required. Any valid JSON object representing the job data.\n- `priority` (int): Optional. Higher numbers mean higher priority (default 0).\n- `delaySeconds` (int): Optional. Number of seconds to delay the job execution.\n- `maxAttempts` (int): Optional. Maximum number of attempts before dead-lettering (default 5).\n- `dedupKey` (string): Optional. Idempotency key. If a job with this key already exists, returns the existing job.\n\n**Responses:**\n- `201 Created`: Job was successfully created.\n- `200 OK`: A job with this `dedupKey` already existed and was returned."
+      }
+    },
+    {
+      "name": "Lease Job",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if(pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.environment.set('job_id', jsonData.id);",
+              "    pm.environment.set('lease_id', jsonData.leaseId);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/v1/queues/{{queue_name}}/lease",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"leaseSeconds\": 30\n}"
+        },
+        "description": "### Lease Job\nClaims the oldest, highest priority pending job from the queue. Provides a fencing token (`leaseId`) that must be used for further operations on this job.\n\n**Request Body:**\n- `leaseSeconds` (int): Optional. The number of seconds the lease is valid for.\n\n**Responses:**\n- `200 OK`: Job claimed. Contains the `leaseId` and `leaseExpiresAt`.\n- `204 No Content`: The queue is empty. No job to claim."
+      }
+    },
+    {
+      "name": "Get Job",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/v1/jobs/{{job_id}}",
+        "description": "### Get Job\nRetrieves the current state and details of a job.\n\n**Responses:**\n- `200 OK`: Job details.\n- `404 Not Found`: Job does not exist."
+      }
+    },
+    {
+      "name": "Heartbeat Job",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/v1/jobs/{{job_id}}/heartbeat",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"leaseId\": \"{{lease_id}}\",\n  \"extendSeconds\": 30\n}"
+        },
+        "description": "### Heartbeat Job\nExtends the lease of a job to prevent the reaper from claiming it. Requires the `leaseId`.\n\n**Request Body:**\n- `leaseId` (string): Required. The fencing token.\n- `extendSeconds` (int): Optional. Seconds to extend the lease by.\n\n**Responses:**\n- `204 No Content`: Lease successfully extended.\n- `409 Conflict`: The lease has expired and been reclaimed, or the `leaseId` is incorrect."
+      }
+    },
+    {
+      "name": "Complete Job",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/v1/jobs/{{job_id}}/complete",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"leaseId\": \"{{lease_id}}\"\n}"
+        },
+        "description": "### Complete Job\nMarks a job as successfully completed.\n\n**Request Body:**\n- `leaseId` (string): Required. The fencing token.\n\n**Responses:**\n- `204 No Content`: Job marked as completed.\n- `409 Conflict`: The lease mismatch."
+      }
+    },
+    {
+      "name": "Fail Job",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/v1/jobs/{{job_id}}/fail",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"leaseId\": \"{{lease_id}}\",\n  \"error\": \"temporary failure\"\n}"
+        },
+        "description": "### Fail Job\nMarks a job attempt as failed. If attempts are exhausted, the job is moved to dead-letters. Otherwise, it is rescheduled with exponential backoff.\n\n**Request Body:**\n- `leaseId` (string): Required. The fencing token.\n- `error` (string): Optional. Description of the failure.\n\n**Responses:**\n- `204 No Content`: Job failure recorded.\n- `409 Conflict`: Lease mismatch."
+      }
+    },
+    {
+      "name": "Queue Stats",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/v1/queues/{{queue_name}}/stats",
+        "description": "### Queue Stats\nReturns statistics for the specified queue.\n\n**Responses:**\n- `200 OK`: Returns the count of pending, leased, dead-lettered jobs, and jobs completed in the last 24h."
+      }
+    },
+    {
+      "name": "List Dead Letters",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if(pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    if (jsonData.length > 0) {",
+              "        pm.environment.set('dead_letter_id', jsonData[0].id);",
+              "    }",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/v1/queues/{{queue_name}}/dead-letters",
+        "description": "### List Dead Letters\nLists up to the latest 100 dead-lettered jobs for a specific queue.\n\n**Responses:**\n- `200 OK`: Array of dead-letter jobs."
+      }
+    },
+    {
+      "name": "Requeue Dead Letter",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/v1/dead-letters/{{dead_letter_id}}/requeue",
+        "description": "### Requeue Dead Letter\nRe-enqueues a dead-lettered job, creating a new `PENDING` job with attempts reset. The old dead letter record is preserved.\n\n**Responses:**\n- `201 Created`: The newly enqueued job.\n- `404 Not Found`: Dead letter not found."
+      }
+    }
+  ]
+}
