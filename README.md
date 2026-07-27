@@ -2,7 +2,7 @@
 
 A distributed job queue with a REST API, built in Go on top of
 PostgreSQL. Week 1, Project 1 of a 15-week backend engineering roadmap
-(see `docs/CURSOR_CONTEXT.md` for the full context) — and deliberately
+and deliberately
 built as **reusable infrastructure**, not a one-off demo: the plan is to
 depend on this from later projects in the roadmap instead of rebuilding
 job-queue logic in every one of them.
