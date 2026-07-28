@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yourname/queueline/internal/config"
-	"github.com/yourname/queueline/internal/db"
-	"github.com/yourname/queueline/internal/queue"
+	"github.com/Zubimendi/QueueLine/internal/config"
+	"github.com/Zubimendi/QueueLine/internal/db"
+	"github.com/Zubimendi/QueueLine/internal/queue"
 )
 
 func TestConcurrentClaims_NeverDoubleClaim(t *testing.T) {

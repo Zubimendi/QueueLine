@@ -14,11 +14,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/yourname/queueline/internal/api"
-	"github.com/yourname/queueline/internal/config"
-	"github.com/yourname/queueline/internal/db"
-	"github.com/yourname/queueline/internal/observability"
-	"github.com/yourname/queueline/internal/queue"
+	"github.com/Zubimendi/QueueLine/internal/api"
+	"github.com/Zubimendi/QueueLine/internal/config"
+	"github.com/Zubimendi/QueueLine/internal/db"
+	"github.com/Zubimendi/QueueLine/internal/observability"
+	"github.com/Zubimendi/QueueLine/internal/queue"
 )
 
 func main() {

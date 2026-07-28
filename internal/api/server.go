@@ -9,8 +9,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 
-	"github.com/yourname/queueline/internal/observability"
-	"github.com/yourname/queueline/internal/queue"
+	"github.com/Zubimendi/QueueLine/internal/observability"
+	"github.com/Zubimendi/QueueLine/internal/queue"
 )
 
 func NewRouter(engine *queue.Engine, pool *pgxpool.Pool, log *zap.Logger, defaultLeaseTTL, maxLeaseTTL time.Duration) http.Handler {

@@ -12,8 +12,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 
-	"github.com/yourname/queueline/internal/observability"
-	"github.com/yourname/queueline/internal/queue"
+	"github.com/Zubimendi/QueueLine/internal/observability"
+	"github.com/Zubimendi/QueueLine/internal/queue"
 )
 
 type Handlers struct {

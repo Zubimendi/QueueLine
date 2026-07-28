@@ -1,4 +1,4 @@
-module github.com/yourname/queueline
+module github.com/Zubimendi/QueueLine
 
 go 1.22
 
